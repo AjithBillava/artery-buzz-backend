@@ -5,7 +5,7 @@ const checkAuth = (req,res,next) =>{
         const token =  req.headers.authorization?.split(" ")[1] || null
 
         if(token === null){
-            return res.status(401).json({message:"logi for better experience"})
+            return res.status(401).json({message:"login for better experience"})
         }
 
         const jwtSecretKey = process.env.JWTSECRET

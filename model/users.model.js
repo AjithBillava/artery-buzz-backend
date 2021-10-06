@@ -11,6 +11,10 @@ const UserSchema = new Schema(
             type:String,
             required:"lastname is required"
         },
+        username:{
+            type:String,
+            required:"username is required"
+        },
         email:{
             type:String,
             unique:true,

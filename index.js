@@ -7,6 +7,7 @@ const cors = require("cors")
 const { initialiseDatabaseConnection } = require("./db/db.connect")
 
 const users = require("./routers/users.router")
+const posts = require("./routers/posts.router")
 
 initialiseDatabaseConnection()
 
@@ -17,6 +18,7 @@ app.get('/', (req, res) => {
 app.use(express.json())
 app.use(cors())
 app.use("/v1/api/user",users)
+app.use("/v1/api",posts)
 
 app.use((err, req, res, next) => {
 	console.error(err.stack);

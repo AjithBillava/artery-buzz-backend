@@ -6,7 +6,7 @@ const NotificationSchema = new Schema(
         action:{
             type:String,
             required:true,
-            enum:["liked,new post,followed,unfollowed"]
+            // enum:["Liked,New Post,Followed"]
         },
         isRead:{
             type:Boolean,

@@ -5,14 +5,14 @@ const emailValidator = require("email-validator")
 const jwt = require("jsonwebtoken")
 const lodash = require("lodash")
 const {User} = require("../model/users.model")
-
+const {Notification} = require("../model/notification.model")
 const registerUser = async(req,res,next) =>{
     try {
         
-        const {firstname,lastname,email,password,bio,profilePic,website} = req.body
+        const {firstname,lastname,username,email,password,bio,profilePic,website} = req.body
         const validateEmail = emailValidator.validate(email)
 
-        if(!firstname||!lastname||!email||!password){
+        if(!firstname||!lastname||!username||!email||!password){
             return res.status(400).json({
                 message:"Please fill the required fields"
             })
@@ -24,17 +24,24 @@ const registerUser = async(req,res,next) =>{
             })
         }
 
+        const checkUserNameExist = await User.findOne({username})
         const foundUser = await User.findOne({email})
+        // const foundUser = await User.findOne({email,username})
 
-        if(foundUser){
+        if(foundUser){  
             return res.status(400).json({
                 message:"user already exists"
+            })
+        }
+        if(checkUserNameExist){
+            return res.status(400).json({
+                message:"username is taken already"
             })
         }
 
         const jwtSecretKey = process.env.JWTSECRET
 
-        const user = new User({firstname,lastname,email,password,bio,profilePic,website})
+        const user = new User({firstname,lastname,username,email,password,bio,profilePic,website})
         bcryptjs.genSalt(10,(err,salt)=>{
             bcryptjs.hash(user.password,salt,async(err,hash)=>{
                 if(err){
@@ -75,7 +82,7 @@ const loginUser = async(req,res,next) =>{
     try {
         
         const {email,password} = req.body
-        const validateEmail= validate(email)
+        const validateEmail= emailValidator.validate(email)
 
         if(!email || !password){
             return res.status(400).json({
@@ -88,7 +95,7 @@ const loginUser = async(req,res,next) =>{
             })
         }
         const foundUser = await User.findOne({email}).select("-createdAt -updatedAt -__v")
-        .populate("followers").populate("following").populate("posts")
+        .populate("followers","-password -__v").populate("following","-password -__v").populate("posts")
 
         if(!foundUser){
             return res.status(404).json({
@@ -135,7 +142,7 @@ const getCurrentUser = async(req,res,next) =>{
         
         const userId = req.user.id
 
-        const foundUser  = await User.findById(userId).select("-password -__v").populate("following").populate("followers")
+        const foundUser  = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").populate("posts")
         // const foundUser  = await User.findById(userId).populate("following").populate("followers").populate("posts")
 
         res.status(201).json({
@@ -152,7 +159,7 @@ const getAllUsers = async(req,res,next) =>{
     try {
         
         const users = await User.find({}).select("-__v")
-        res.status(401).json({
+        res.status(201).json({
             users
         })
 
@@ -167,8 +174,7 @@ const updateUsers = async(req,res,next) => {
         const {userId} = req.params
         const userUpdates = req.body
 
-        const foundUser = await User.findById(userId).populate("followers").populate("following").populate("posts")
-
+        const foundUser = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
         if(!foundUser){
             return res.status(404).json({
                 message:"User does not exist"
@@ -195,9 +201,9 @@ const followUser = async(req,res,next) =>{
         const {userId} = req.params
         const {userId:followedUserId} = req.body
 
-        const foundUser  = await User.findById(userId).select("-password -__v").populate("following").populate("followers")
+        let foundUser  = await User.findById(userId)
         // const foundUser = await User.findById(userId)
-        const followedUser = await User.findById(followedUserId).select("-password -__v").populate("following").populate("followers")
+        let followedUser = await User.findById(followedUserId)
         
         if(!followedUser){
             return res.status(404).json({
@@ -214,14 +220,17 @@ const followUser = async(req,res,next) =>{
         followedUser.followers.push(foundUser)
 
         await foundUser.save()
-        // let user = await foundUser.save()
         await followedUser.save()
+        foundUser =await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
+        // let user = await foundUser.save()
+        followedUser = await User.findById(followedUserId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
         // console.log(user)
         // user = await user.populate("following").populate("followers").execPopulate()
 
-        res.status(201).json({followedUser,foundUser})
+        res.status(201).json({foundUser,followedUser})
         // res.status(201).json({followedUser,user})
 
+        notificationForFollow(userId,followedUserId)
 
     } catch (error) {
         next(error)
@@ -232,10 +241,11 @@ const unfollowUser = async(req,res,next) =>{
     try {
         
         const {userId} = req.params
-        const {unfollowedUserId} = req.body
+        const {userId:unfollowedUserId} = req.body
 
-        const foundUser = await User.findById(userId)
-        const unfollowedUser = await User.findById(unfollowedUserId)
+        let foundUser = await User.findById(userId)
+        // const foundUser = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
+        let unfollowedUser = await User.findById(unfollowedUserId)
         if(!unfollowedUser){
             return res.status(404).json({
                 message:"user does not exist"
@@ -243,13 +253,15 @@ const unfollowUser = async(req,res,next) =>{
         }
         foundUser.following.pull(unfollowedUserId)
         unfollowedUser.followers.pull(foundUser)
-
-        let user = await foundUser.save()
+        await foundUser.save()
         await unfollowedUser.save()
+        // let user = await foundUser.save()
+        foundUser= await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
+        unfollowedUser= await User.findById(unfollowedUserId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
 
-        user = await user.populate("following").populate("followers").execPopulate()
+        // user = await user.populate("following").populate("followers").execPopulate()
 
-        res.status(201).json({unfollowedUser,user})
+        res.status(201).json({foundUser,unfollowedUser})
 
 
     } catch (error) {
@@ -257,23 +269,41 @@ const unfollowUser = async(req,res,next) =>{
     }
 }
 
-const notificationForFollow = async(req,res,next) =>{
+const notificationForFollow = async(userId,followedUserId) =>{
+    try {
+        const newNotification = {
+          action: "Followed",
+          originUser: userId,
+          destinationUser: followedUserId,
+        };
+        Notification.create(newNotification);
+        // const newNotification = {
+        //   action: "followed",
+        //   originUser: userId,
+        //   destination: followedUserId,
+        // };
+        // await Notification.save(newNotification);
+      } catch (error) {
+        return new Error("Follow notification failed!");
+      }
+}
+
+const getUserNotification = async( req,res,next) =>{
     try {
         
+        // const {userId} = req.body
         const {userId} = req.params
-        const {user:followersUserId} = req.body
-
-        const newNotification = new Notification({action:"followed",originUser:userId,destinationUser:followersUserId})
-        await newNotification.save()
-
-        return res.status(200).json({
-            notification:newNotification
+        const notifications = await Notification.find({destinationUser:userId}).sort("-createdAt").select("-__v")
+        
+        res.status(201).json({
+            notifications
         })
-
+        
     } catch (error) {
         next(error)
     }
 }
+
 
 module.exports={
     getAllUsers,
@@ -283,5 +313,6 @@ module.exports={
     loginUser,
     followUser,
     unfollowUser,
-    notificationForFollow
+    getUserNotification
+    // notificationForFollow
 }
