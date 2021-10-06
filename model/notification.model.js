@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
-const NotificationSchema = Schema(
+const NotificationSchema = new Schema(
     {
         action:{
             type:String,
@@ -26,3 +26,5 @@ const NotificationSchema = Schema(
         }
     }
 )
+const Notification = mongoose.model("Notification",NotificationSchema)
+module.exports = {Notification}

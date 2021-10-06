@@ -1,9 +1,9 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
-const UserSchema = Schema(
+const UserSchema = new Schema(
     {
-        firstName: {
+        firstname: {
             type:String,
             required:"firstname is required"
         },
@@ -24,15 +24,15 @@ const UserSchema = Schema(
             type:String
         },
         profielPic: {
-            type:mongoose.SchemaTypes.Url
+            type:String
         },
         website:{
-            type:mongoose.SchemaTypes.Url
+            type:String
         },
         followers:[
             {
                 type:Schema.Types.ObjectId,ref:"User"
-            },
+            }
         ],
         following:[
             {

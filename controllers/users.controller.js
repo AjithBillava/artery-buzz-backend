@@ -1,18 +1,20 @@
-import { compare, genSalt, hash } from "bcryptjs"
-import { validate } from "email-validator"
-import { sign } from "jsonwebtoken"
-import { extend } from "lodash"
-import { User } from "../model/users.model"
+
+
+const bcryptjs = require("bcryptjs")
+const emailValidator = require("email-validator")
+const jwt = require("jsonwebtoken")
+const lodash = require("lodash")
+const {User} = require("../model/users.model")
 
 const registerUser = async(req,res,next) =>{
     try {
         
         const {firstname,lastname,email,password,bio,profilePic,website} = req.body
-        const validateEmail = validate(email)
+        const validateEmail = emailValidator.validate(email)
 
-        if(!firstname||!lastname||!email||!password||!bio||!profilePic||!website){
+        if(!firstname||!lastname||!email||!password){
             return res.status(400).json({
-                message:"Please fill all fields"
+                message:"Please fill the required fields"
             })
         }
 
@@ -33,15 +35,15 @@ const registerUser = async(req,res,next) =>{
         const jwtSecretKey = process.env.JWTSECRET
 
         const user = new User({firstname,lastname,email,password,bio,profilePic,website})
-        genSalt(10,(err,salt)=>{
-            hash(user.password,salt,async(err,hash)=>{
+        bcryptjs.genSalt(10,(err,salt)=>{
+            bcryptjs.hash(user.password,salt,async(err,hash)=>{
                 if(err){
                     throw Error(err)
                 }
                 user.password=hash
                 
                 const updatedUser = await user.save()
-                sign(
+                jwt.sign(
                     {id:updatedUser._id},
                     jwtSecretKey,
                     {expiresIn:"24h"},
@@ -94,7 +96,7 @@ const loginUser = async(req,res,next) =>{
             })
         }
 
-        const checkPassword = await compare(password,foundUser.password)
+        const checkPassword = await bcryptjs.compare(password,foundUser.password)
         if(!checkPassword){
             return res.status(400).json({
                 message:"Invalid password"
@@ -103,7 +105,7 @@ const loginUser = async(req,res,next) =>{
 
         const jwtSecretKey = process.env.JWTSECRET
 
-        sign(
+        jwt.sign(
             {id:foundUser},
             jwtSecretKey,
             {expiresIn:"24h"},
@@ -131,9 +133,10 @@ const loginUser = async(req,res,next) =>{
 const getCurrentUser = async(req,res,next) =>{
     try {
         
-        const {userId} = req.body
+        const userId = req.user.id
 
-        const foundUser  = await User.findById(userId).populate("following").populate("followers").populate("posts")
+        const foundUser  = await User.findById(userId).select("-password -__v").populate("following").populate("followers")
+        // const foundUser  = await User.findById(userId).populate("following").populate("followers").populate("posts")
 
         res.status(201).json({
             message:"user fetched successfully",
@@ -145,7 +148,7 @@ const getCurrentUser = async(req,res,next) =>{
     }
 }
 
-const getAllUsers = (req,res,next) =>{
+const getAllUsers = async(req,res,next) =>{
     try {
         
         const users = await User.find({}).select("-__v")
@@ -158,7 +161,7 @@ const getAllUsers = (req,res,next) =>{
     }
 }
 
-const updateUsers = (req,res,next) =>{
+const updateUsers = async(req,res,next) => {
     try {
         
         const {userId} = req.params
@@ -172,7 +175,7 @@ const updateUsers = (req,res,next) =>{
             })
         }
 
-        const updateUser = extend(foundUser,userUpdates)
+        const updateUser = lodash.extend(foundUser,userUpdates)
         await updateUser.save()
 
         updateUser.password=undefined
@@ -192,24 +195,32 @@ const followUser = async(req,res,next) =>{
         const {userId} = req.params
         const {userId:followedUserId} = req.body
 
-        const foundUser = await User.findById(userId)
-        const followedUser = await User.findById(userId)
+        const foundUser  = await User.findById(userId).select("-password -__v").populate("following").populate("followers")
+        // const foundUser = await User.findById(userId)
+        const followedUser = await User.findById(followedUserId).select("-password -__v").populate("following").populate("followers")
         
         if(!followedUser){
             return res.status(404).json({
                 message:"User does not exists"
             })
         }
+        // const checkAlreadyFollowing = await User.findById(userId).findOne({followedUserId})
+
+        // if(checkAlreadyFollowing ){
+        //     return res.status(401).json({message:"you are already following"})
+        // }
 
         foundUser.following.push(followedUserId)
         followedUser.followers.push(foundUser)
 
         await foundUser.save()
+        // let user = await foundUser.save()
         await followedUser.save()
+        // console.log(user)
+        // user = await user.populate("following").populate("followers").execPopulate()
 
-        const user = foundUser.populate("following").populate("followers")
-
-        res.status(201).json({followedUser,user})
+        res.status(201).json({followedUser,foundUser})
+        // res.status(201).json({followedUser,user})
 
 
     } catch (error) {
@@ -233,10 +244,10 @@ const unfollowUser = async(req,res,next) =>{
         foundUser.following.pull(unfollowedUserId)
         unfollowedUser.followers.pull(foundUser)
 
-        await foundUser.save()
+        let user = await foundUser.save()
         await unfollowedUser.save()
 
-        const user = foundUser.populate("following").populate("followers")
+        user = await user.populate("following").populate("followers").execPopulate()
 
         res.status(201).json({unfollowedUser,user})
 
@@ -264,10 +275,11 @@ const notificationForFollow = async(req,res,next) =>{
     }
 }
 
-module.exports = {
+module.exports={
     getAllUsers,
     getCurrentUser,
     registerUser,
+    updateUsers,
     loginUser,
     followUser,
     unfollowUser,
