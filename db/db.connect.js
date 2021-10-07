@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 
-const initialiseDatabaseConnection = async() =>{
+async function initialiseDatabaseConnection() {
     try{
         await mongoose.connect(process.env.db_path,{
             useUnifiedTopology:true,
