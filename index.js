@@ -8,9 +8,9 @@ const { initialiseDatabaseConnection } = require("./db/db.connect")
 
 const users = require("./routers/users.router")
 const posts = require("./routers/posts.router")
+dotenv.config()
 
 initialiseDatabaseConnection()
-dotenv.config()
 
 app.use(express.json())
 app.use(cors())
