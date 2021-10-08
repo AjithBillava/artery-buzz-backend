@@ -125,7 +125,7 @@ const loginUser = async(req,res,next) =>{
                     {
                         message:"logged in",
                         token,
-                        foundUser
+                        user:foundUser
                     }
                 )
             }
