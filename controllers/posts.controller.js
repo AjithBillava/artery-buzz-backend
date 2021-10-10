@@ -5,7 +5,7 @@ const getAllPosts = async (req,res,next)=>{
     try {
         const {userId} = req.params
         // const posts= await User.findOne({userId}).select("-__v -created_at")
-        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers").exec()
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate({path:'likedUsers',model:"User"}).exec()
         res.status(201).json({
             posts
         })
@@ -51,7 +51,7 @@ const likedPost = async(req,res,next) =>{
         // console.log(foundUserPost)
         foundUserPost.likedUsers.push(userId)
         await foundUserPost.save()
-        const posts=await Post.findById(postId).populate('likedUsers').exec()
+        const posts=await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
         res.status(201).json({
             posts
         })
@@ -70,7 +70,7 @@ const unlikedPost = async(req,res,next) =>{
 
         foundUserPost.likedUsers.pull(userId)
         await foundUserPost.save()
-        const posts=await Post.findById(postId).populate('likedUsers').exec()
+        const posts=await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
         res.status(201).json({
             posts
         })
