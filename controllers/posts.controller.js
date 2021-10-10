@@ -51,7 +51,7 @@ const likedPost = async(req,res,next) =>{
         // console.log(foundUserPost)
         foundUserPost.likedUsers.push(userId)
         await foundUserPost.save()
-        const posts=await Post.findById(postId).populate('likedUsers').execPopulate()
+        const posts=await Post.findById(postId).populate('likedUsers').exec()
         res.status(201).json({
             posts
         })
@@ -70,7 +70,7 @@ const unlikedPost = async(req,res,next) =>{
 
         foundUserPost.likedUsers.pull(userId)
         await foundUserPost.save()
-        const posts=await Post.findById(postId).populate('likedUsers').execPopulate()
+        const posts=await Post.findById(postId).populate('likedUsers').exec()
         res.status(201).json({
             posts
         })
