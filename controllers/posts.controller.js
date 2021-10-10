@@ -5,7 +5,7 @@ const getAllPosts = async (req,res,next)=>{
     try {
         const {userId} = req.params
         // const posts= await User.findOne({userId}).select("-__v -created_at")
-        const posts= await Post.find({}).select("-__v").populate("author","-password").populate("likedUsers")
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers")
 
         res.status(201).json({
             posts
