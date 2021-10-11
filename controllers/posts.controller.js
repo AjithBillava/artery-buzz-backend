@@ -3,18 +3,15 @@ const { User } = require("../model/users.model")
 
 const getAllPosts = async (req,res,next)=>{
     try {
-        const {userId} = req.params
-        // const posts= await User.findOne({userId}).select("-__v -created_at")
-        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate({path:'likedUsers',model:"User"}).exec()
+       
+        
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v")
         res.status(201).json({
             posts
         })
 
 
-        // const users = await User.find({}).select("-__v")
-        // res.status(201).json({
-        //     users
-        // })
+        
     } catch (error) {
         next(error)
     }
@@ -26,16 +23,16 @@ const addNewPosts = async(req,res,next) =>{
         const {content} = req.body
 
         const foundUser = await User.findById(author)
-        // const foundPostsArray = await Post.findOne({userId})
+        
         const newPost = new Post({author,content,likedUsers:[]})
 
         foundUser.posts= newPost
         await foundUser.save()
 
-        const updatedPost = await (await newPost.save()).populate("likedUsers")
+        const updatedPost = await (await newPost.save()).populate("likedUsers", "-password -__v")
 
         res.status(201).json({message:"added new post",posts:updatedPost})
-        notificationForNewPost(updatedPost)
+        notificationForNewPost(updatedPost,author)
 
     } catch (error) {
         next(error)
@@ -46,14 +43,15 @@ const likedPost = async(req,res,next) =>{
     try {
         
         const {userId,postId} = req.params
-        // const  {postId} = req.body
-        const foundUserPost = await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
-        // console.log(foundUserPost)
+        
+        const foundUserPost = await Post.findById(postId).populate("likedUsers", "-password -__v")
+        
         foundUserPost.likedUsers.push(userId)
         await foundUserPost.save()
-        // const posts=await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
+        const posts= await Post.findById(postId).populate("likedUsers", "-password -__v")
         res.status(201).json({
-            posts:foundUserPost
+            posts
+            
         })
         notificationForLike(foundUserPost)
 
@@ -65,14 +63,15 @@ const unlikedPost = async(req,res,next) =>{
     try {
         
         const {userId,postId} = req.params
-        // const  {postId} = req.body
-        const foundUserPost =await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
+       
+        const foundUserPost =await Post.findById(postId).populate("likedUsers", "-password -__v")
 
         foundUserPost.likedUsers.pull(userId)
         await foundUserPost.save()
-        // const posts=await Post.findById(postId).populate({path:'likedUsers',model:"User"}).exec()
+        const posts= await Post.findById(postId).populate("likedUsers", "-password -__v")
         res.status(201).json({
-            posts:foundUserPost
+            posts
+            
         })
 
     } catch (error) {

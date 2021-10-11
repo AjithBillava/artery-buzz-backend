@@ -13,10 +13,9 @@ const PostSchema = new Schema(
         },
         likedUsers:[
             {
-                type:String,
-                ref:"User"
+                type:Schema.Types.ObjectId,ref:"User"
             }
-        ],
+        ]
     }
 )
 
