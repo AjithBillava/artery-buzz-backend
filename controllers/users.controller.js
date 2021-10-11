@@ -142,7 +142,7 @@ const getCurrentUser = async(req,res,next) =>{
         
         const userId = req.user.id
 
-        const foundUser  = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").populate("posts")
+        const foundUser  = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").populate("posts","-__v")
         // const foundUser  = await User.findById(userId).populate("following").populate("followers").populate("posts")
 
         res.status(201).json({
@@ -158,7 +158,7 @@ const getCurrentUser = async(req,res,next) =>{
 const getAllUsers = async(req,res,next) =>{
     try {
         
-        const users = await User.find({}).select("-__v")
+        const users = await User.find({}).select("-password -__v")
         res.status(201).json({
             users
         })

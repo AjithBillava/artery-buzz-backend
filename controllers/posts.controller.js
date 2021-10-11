@@ -26,7 +26,7 @@ const addNewPosts = async(req,res,next) =>{
         
         const newPost = new Post({author,content,likedUsers:[]})
 
-        foundUser.posts= newPost
+        foundUser.posts.push(newPost)
         await foundUser.save()
 
         const updatedPost = await (await newPost.save()).populate("likedUsers", "-password -__v")
