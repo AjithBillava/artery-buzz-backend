@@ -142,7 +142,14 @@ const getCurrentUser = async(req,res,next) =>{
         
         const userId = req.user.id
 
-        const foundUser  = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").populate("posts","-__v")
+        const foundUser  = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            }
+        })
         // const foundUser  = await User.findById(userId).populate("following").populate("followers").populate("posts")
 
         res.status(201).json({
