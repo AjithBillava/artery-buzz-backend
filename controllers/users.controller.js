@@ -95,7 +95,14 @@ const loginUser = async(req,res,next) =>{
             })
         }
         const foundUser = await User.findOne({email}).select("-createdAt -updatedAt -__v")
-        .populate("followers","-password -__v").populate("following","-password -__v").populate("posts")
+        .populate("followers","-password -__v").populate("following","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            }
+        })
 
         if(!foundUser){
             return res.status(404).json({
