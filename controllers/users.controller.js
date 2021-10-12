@@ -179,7 +179,21 @@ const getCurrentUser = async(req,res,next) =>{
 const getAllUsers = async(req,res,next) =>{
     try {
         
-        const users = await User.find({}).select("-password -__v")
+        const users = await User.find({}).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"author",
+                select:"-__v -password",
+            }
+        }).
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            },
+        })
         res.status(201).json({
             users
         })
