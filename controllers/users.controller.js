@@ -209,7 +209,21 @@ const updateUsers = async(req,res,next) => {
         const {userId} = req.params
         const userUpdates = req.body
 
-        const foundUser = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
+        const foundUser = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"author",
+                select:"-__v -password",
+            }
+        }).
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            },
+        })
         if(!foundUser){
             return res.status(404).json({
                 message:"User does not exist"
