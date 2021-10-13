@@ -205,8 +205,8 @@ const getAllUsers = async(req,res,next) =>{
 
 const getUserData = async(req,res,next) =>{
     try {
-        const {userId} = req.body
-        const user = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        const {requiredUserId} = req.params
+        const user = await User.findById(requiredUserId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
         populate({
             path:"posts",
             populate:{
