@@ -18,7 +18,7 @@ userRouter.route("/login").post(loginUser)
 userRouter.route("/register").post(registerUser)
 
 userRouter.route("/:userId").all(checkAuth).get(getAllUsers)
-userRouter.route("/:userId/userProfile").all(checkAuth).get(getUserData)
+userRouter.route("/:userId/userProfile/:requiredUserId").all(checkAuth).get(getUserData)
 userRouter.route("/:userId/follow").all(checkAuth).post(followUser)
 userRouter.route("/:userId/notifications").all(checkAuth).get(getUserNotification)
 // userRouter.route("/:userId/follow").all(checkAuth).post(followUser).post(notificationForFollow)
