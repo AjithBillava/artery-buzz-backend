@@ -7,7 +7,8 @@ const { getAllUsers,
     followUser,
     unfollowUser,
     getUserNotification,
-    updateUsers} = require("../controllers/users.controller")
+    updateUsers,
+    getUserData} = require("../controllers/users.controller")
 
 const userRouter = express.Router();
 
@@ -17,6 +18,7 @@ userRouter.route("/login").post(loginUser)
 userRouter.route("/register").post(registerUser)
 
 userRouter.route("/:userId").all(checkAuth).get(getAllUsers)
+userRouter.route("/:userId/userProfile").all(checkAuth).get(getUserData)
 userRouter.route("/:userId/follow").all(checkAuth).post(followUser)
 userRouter.route("/:userId/notifications").all(checkAuth).get(getUserNotification)
 // userRouter.route("/:userId/follow").all(checkAuth).post(followUser).post(notificationForFollow)

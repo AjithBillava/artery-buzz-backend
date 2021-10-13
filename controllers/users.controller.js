@@ -203,6 +203,32 @@ const getAllUsers = async(req,res,next) =>{
     }
 }
 
+const getUserData = async(req,res,next) =>{
+    try {
+        const {userId} = req.body
+        const user = await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"author",
+                select:"-__v -password",
+            }
+        }).
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            },
+        })
+        res.status(201).json({
+            user
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 const updateUsers = async(req,res,next) => {
     try {
         
@@ -357,6 +383,7 @@ const getUserNotification = async( req,res,next) =>{
 module.exports={
     getAllUsers,
     getCurrentUser,
+    getUserData,
     registerUser,
     updateUsers,
     loginUser,
