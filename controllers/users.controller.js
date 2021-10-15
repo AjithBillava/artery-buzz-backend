@@ -376,12 +376,7 @@ const notificationForFollow = async(userId,followedUserId) =>{
           destinationUser: followedUserId,
         };
         Notification.create(newNotification);
-        // const newNotification = {
-        //   action: "followed",
-        //   originUser: userId,
-        //   destination: followedUserId,
-        // };
-        // await Notification.save(newNotification);
+        
       } catch (error) {
         return new Error("Follow notification failed!");
       }
@@ -403,6 +398,29 @@ const getUserNotification = async( req,res,next) =>{
     }
 }
 
+const readNotification = async(req,res,next) =>{
+    try {
+        
+        const {userId} = req.params
+        const {notificationId} = req.body
+
+        let foundUserNotification = await Notification.findById(notificationId)
+        // if(foundUserNotification.destinationUser === userId){
+            foundUserNotification.isRead = true
+        // }
+
+        foundUserNotification = await foundUserNotification.save()
+        const notifications = await Notification.find({destinationUser:userId}).sort("-createdAt").select("-__v")
+        
+        res.status(201).json({
+            notificatonRead:foundUserNotification,
+            notifications
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 module.exports={
     getAllUsers,
@@ -413,6 +431,6 @@ module.exports={
     loginUser,
     followUser,
     unfollowUser,
-    getUserNotification
-    // notificationForFollow
+    getUserNotification,
+    readNotification,
 }

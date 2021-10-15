@@ -53,8 +53,8 @@ const likedPost = async(req,res,next) =>{
             posts
             
         })
-        notificationForLike(foundUserPost)
-
+        notificationForLike(foundUserPost._id,foundUserPost.author,userId)
+        console.log(notificationForLike(foundUserPost._id,foundUserPost.author,userId))
     } catch (error) {
         next(error)
     }
@@ -79,13 +79,14 @@ const unlikedPost = async(req,res,next) =>{
     }
 }
 
-const notificationForLike = async (post, userId) => {
+const notificationForLike = async (postId,author, userId) => {
     try {
+        console.log(postId,author,userId)
       const newNotification = {
         action: "Liked",
-        postId: post._id,
+        postId: postId,
         originUser: userId,
-        destinationUser: post.userId,
+        destinationUser: author,
       };
       Notification.create(newNotification);
     } catch (error) {
@@ -94,13 +95,27 @@ const notificationForLike = async (post, userId) => {
   };
 const notificationForNewPost = async (post, userId) => {
     try {
-      const newNotification = {
-        action: "Liked",
-        postId: post._id,
-        originUser: userId,
-        destinationUser: post.userId,
-      };
-      Notification.create(newNotification);
+        console.log(post,userId)
+        const {followers} = await User.findById(userId).populate("followers","-__v -password")
+
+        followers.forEach(user => {
+            const newNotification = {
+                action: "New Post",
+                postId: post._id,
+                originUser: user._id,
+                destinationUser: post.author._id,
+              };
+            Notification.create(newNotification);
+
+        });
+        
+    //   const newNotification = {
+    //     action: "New Post",
+    //     postId: post._id,
+    //     originUser: userId,
+    //     destinationUser: post.author._id,
+    //   };
+    //   Notification.create(newNotification);
     } catch (error) {
       return new Error("Like notification failed!");
     }
