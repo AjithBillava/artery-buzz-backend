@@ -296,15 +296,27 @@ const followUser = async(req,res,next) =>{
 
         await foundUser.save()
         await followedUser.save()
-        foundUser =await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
-        // let user = await foundUser.save()
+        foundUser =await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"author",
+                select:"-__v -password",
+            }
+        }).
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            },
+        })
+        
+
         followedUser = await User.findById(followedUserId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
-        // console.log(user)
-        // user = await user.populate("following").populate("followers").execPopulate()
-
-        res.status(201).json({foundUser,followedUser})
-        // res.status(201).json({followedUser,user})
-
+        
+        res.status(201).json({user:foundUser,followedUser})
+        
         notificationForFollow(userId,followedUserId)
 
     } catch (error) {
@@ -330,13 +342,25 @@ const unfollowUser = async(req,res,next) =>{
         unfollowedUser.followers.pull(foundUser)
         await foundUser.save()
         await unfollowedUser.save()
-        // let user = await foundUser.save()
-        foundUser= await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
+        
+        foundUser= await User.findById(userId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v").
+        populate({
+            path:"posts",
+            populate:{
+                path:"author",
+                select:"-__v -password",
+            }
+        }).
+        populate({
+            path:"posts",
+            populate:{
+                path:"likedUsers",
+                select:"-__v -password",
+            },
+        })
         unfollowedUser= await User.findById(unfollowedUserId).select("-password -__v").populate("following","-password -__v").populate("followers","-password -__v")
 
-        // user = await user.populate("following").populate("followers").execPopulate()
-
-        res.status(201).json({foundUser,unfollowedUser})
+        res.status(201).json({user:foundUser,unfollowedUser})
 
 
     } catch (error) {
