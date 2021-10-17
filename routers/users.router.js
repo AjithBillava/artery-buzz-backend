@@ -9,7 +9,8 @@ const { getAllUsers,
     getUserNotification,
     updateUsers,
     getUserData,
-    readNotification} = require("../controllers/users.controller")
+    readNotification,
+    clearNotifiaions} = require("../controllers/users.controller")
 
 const userRouter = express.Router();
 
@@ -22,6 +23,7 @@ userRouter.route("/:userId").all(checkAuth).get(getAllUsers)
 userRouter.route("/:userId/userProfile/:requiredUserId").all(checkAuth).get(getUserData)
 userRouter.route("/:userId/follow").all(checkAuth).post(followUser)
 userRouter.route("/:userId/notifications").all(checkAuth).get(getUserNotification).post(readNotification)
+userRouter.route("/:userId/notifications/clear").all(checkAuth).post(clearNotifiaions)
 // userRouter.route("/:userId/follow").all(checkAuth).post(followUser).post(notificationForFollow)
 userRouter.route("/:userId/unfollow").all(checkAuth).post(unfollowUser)
 userRouter.route("/:userId/updateUser").all(checkAuth).post(updateUsers)

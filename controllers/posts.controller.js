@@ -1,5 +1,6 @@
 const { Post } = require("../model/posts.model")
 const { User } = require("../model/users.model")
+const {Notification} = require("../model/notification.model")
 
 const getAllPosts = async (req,res,next)=>{
     try {
@@ -54,7 +55,6 @@ const likedPost = async(req,res,next) =>{
             
         })
         notificationForLike(foundUserPost._id,foundUserPost.author,userId)
-        console.log(notificationForLike(foundUserPost._id,foundUserPost.author,userId))
     } catch (error) {
         next(error)
     }
@@ -81,7 +81,7 @@ const unlikedPost = async(req,res,next) =>{
 
 const notificationForLike = async (postId,author, userId) => {
     try {
-        console.log(postId,author,userId)
+        // console.log(postId,author,userId)
       const newNotification = {
         action: "Liked",
         postId: postId,
@@ -97,14 +97,15 @@ const notificationForNewPost = async (post, userId) => {
     try {
         console.log(post,userId)
         const {followers} = await User.findById(userId).populate("followers","-__v -password")
-
+        console.log(followers)
         followers.forEach(user => {
             const newNotification = {
                 action: "New Post",
                 postId: post._id,
-                originUser: user._id,
-                destinationUser: post.author._id,
+                originUser: userId,
+                destinationUser: user._id,
               };
+              console.log(newNotification)
             Notification.create(newNotification);
 
         });

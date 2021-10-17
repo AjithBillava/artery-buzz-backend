@@ -422,6 +422,26 @@ const readNotification = async(req,res,next) =>{
     }
 }
 
+const clearNotifiaions = async (req,res,next)=>{
+    try {
+        
+        const {userId} = req.params
+        
+        const deleted = await Notification.deleteMany({"destinationUser":userId})
+        
+        const notifications = await Notification.findOne({destinationUser:userId})
+
+        res.status(201).json({
+            notifications,
+            deleted
+        }
+        )
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports={
     getAllUsers,
     getCurrentUser,
@@ -433,4 +453,5 @@ module.exports={
     unfollowUser,
     getUserNotification,
     readNotification,
+    clearNotifiaions
 }
