@@ -120,7 +120,7 @@ const loginUser = async(req,res,next) =>{
         const jwtSecretKey = process.env.JWTSECRET
 
         jwt.sign(
-            {id:foundUser},
+            {id:foundUser._id},
             jwtSecretKey,
             {expiresIn:"24h"},
             (err,token)=>{
