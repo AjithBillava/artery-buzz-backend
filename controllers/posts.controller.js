@@ -49,7 +49,7 @@ const likedPost = async(req,res,next) =>{
         
         foundUserPost.likedUsers.push(userId)
         await foundUserPost.save()
-        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v")
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v").populate("comments","-password -__v")
         res.status(201).json({
             posts
             
