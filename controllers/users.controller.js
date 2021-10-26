@@ -422,7 +422,7 @@ const readNotification = async(req,res,next) =>{
     }
 }
 
-const clearNotifiaions = async (req,res,next)=>{
+const clearNotifications = async (req,res,next)=>{
     try {
         
         const {userId} = req.params
@@ -453,5 +453,5 @@ module.exports={
     unfollowUser,
     getUserNotification,
     readNotification,
-    clearNotifiaions
+    clearNotifications
 }

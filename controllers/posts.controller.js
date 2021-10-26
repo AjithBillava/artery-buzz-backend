@@ -6,7 +6,7 @@ const getAllPosts = async (req,res,next)=>{
     try {
        
         
-        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v")
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v").populate("comments","-password -__v")
         res.status(201).json({
             posts
         })
@@ -30,7 +30,7 @@ const addNewPosts = async(req,res,next) =>{
         foundUser.posts.push(newPost)
         await foundUser.save()
 
-        const updatedPost = await (await newPost.save()).populate("likedUsers", "-password -__v")
+        const updatedPost = await (await newPost.save()).populate("likedUsers", "-password -__v").populate("comments","-password -__v")
 
         res.status(201).json({message:"added new post",posts:updatedPost})
         notificationForNewPost(updatedPost,author)
@@ -68,7 +68,7 @@ const unlikedPost = async(req,res,next) =>{
 
         foundUserPost.likedUsers.pull(userId)
         await foundUserPost.save()
-        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v")
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v").populate("comments","-password -__v")
         res.status(201).json({
             posts
             
@@ -79,20 +79,53 @@ const unlikedPost = async(req,res,next) =>{
     }
 }
 
-const notificationForLike = async (postId,author, userId) => {
+const commentOnPost = async(req,res,next) =>{
+    try {
+        
+        const {userId,postId}=req.params
+        const {comment} = req.body
+        
+        const foundUserPost = await Post.findById(postId).populate("comments","-password -__v")
+
+        foundUserPost.comments.push({userId,comment})
+        await foundUserPost.save()
+        console.log({userId,comment})
+        console.log(foundUserPost)
+        const posts= await Post.find({}).select("-__v").populate("author","-password -__v").populate("likedUsers", "-password -__v").populate({
+            path:"comments",
+            populate:{
+                path:"userId",
+                select:"-__v -password",
+            }
+        })
+
+
+        res.status(201).json({
+            posts
+            
+        })
+        notificationForComment(foundUserPost._id,foundUserPost.author,userId)
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const notificationForComment = async (postId,author, userId) => {
     try {
         // console.log(postId,author,userId)
       const newNotification = {
-        action: "Liked",
+        action: "New comment",
         postId: postId,
         originUser: userId,
         destinationUser: author,
       };
       Notification.create(newNotification);
     } catch (error) {
-      return new Error("Like notification failed!");
+      return new Error("New Comment notification failed!");
     }
   };
+
 const notificationForNewPost = async (post, userId) => {
     try {
         console.log(post,userId)
@@ -122,5 +155,5 @@ const notificationForNewPost = async (post, userId) => {
     }
   };
 module.exports = {
-    addNewPosts,getAllPosts,likedPost,unlikedPost
+    addNewPosts,getAllPosts,likedPost,unlikedPost,commentOnPost
 }
