@@ -125,6 +125,20 @@ const notificationForComment = async (postId,author, userId) => {
       return new Error("New Comment notification failed!");
     }
   };
+const notificationForLike= async (postId,author, userId) => {
+    try {
+        // console.log(postId,author,userId)
+      const newNotification = {
+        action: "Liked",
+        postId: postId,
+        originUser: userId,
+        destinationUser: author,
+      };
+      Notification.create(newNotification);
+    } catch (error) {
+      return new Error("Like notification failed!");
+    }
+  };
 
 const notificationForNewPost = async (post, userId) => {
     try {
